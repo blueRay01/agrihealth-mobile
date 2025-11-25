@@ -18,11 +18,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import com.example.ricediseaseclassifier.ui.theme.RiceDiseaseClassifierTheme
+import android.net.Uri
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
-    private var lastCapturedBitmap: Bitmap? = null
-    private var lastPrediction: PredictionResult? = null
+    // ✅ Keep these as class-level state
+    private var lastCapturedBitmap by mutableStateOf<Bitmap?>(null)
+    private var lastPrediction by mutableStateOf<PredictionResult?>(null)
     private var currentScreen by mutableStateOf("home")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,31 +37,34 @@ class MainActivity : ComponentActivity() {
             RiceDiseaseClassifierTheme {
                 val context = LocalContext.current
 
+                // --- Keep track of captured images ---
+                val savedImages = remember { mutableStateListOf<Bitmap>() }
+
+                // --- Load images from internal storage on startup ---
+                LaunchedEffect(Unit) {
+                    context.filesDir.listFiles()?.forEach { file ->
+                        val bmp = BitmapFactory.decodeFile(file.absolutePath)
+                        bmp?.let { savedImages.add(it) }
+                    }
+                }
+
                 var showSplash by remember { mutableStateOf(true) }
                 var showOnboarding by remember { mutableStateOf(false) }
                 var onboardingFinished by remember { mutableStateOf(false) }
-
-                LaunchedEffect(Unit) {
-                    val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
-                    val hasSeenOnboarding = sharedPref.getBoolean("has_seen_onboarding", false)
-                    showOnboarding = !hasSeenOnboarding
-                }
-
-                // ===== Compose camera & gallery launchers =====
-                val cameraPermission = Manifest.permission.CAMERA
-                val galleryPermission = if (Build.VERSION.SDK_INT >= 33) {
-                    Manifest.permission.READ_MEDIA_IMAGES
-                } else {
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                }
-
+// --- Camera & Gallery Launchers ---
                 val cameraLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.TakePicturePreview()
                 ) { bitmap ->
                     bitmap?.let {
                         lastCapturedBitmap = it
                         lastPrediction = ImageClassifier(context).classify(it)
-                        currentScreen = "result" // directly go to results
+
+                        saveBitmapToInternalStorage(context, it)?.let { uri ->
+                            val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
+                            savedBmp?.let { bmp -> savedImages.add(bmp) }
+                        }
+
+                        currentScreen = "result"
                     }
                 }
 
@@ -67,8 +75,24 @@ class MainActivity : ComponentActivity() {
                         val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
                         lastCapturedBitmap = bitmap
                         lastPrediction = bitmap?.let { bmp -> ImageClassifier(context).classify(bmp) }
+
+                        bitmap?.let { bmp ->
+                            saveBitmapToInternalStorage(context, bmp)?.let { uri ->
+                                val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
+                                savedBmp?.let { savedImages.add(it) }
+                            }
+                        }
+
                         currentScreen = "result"
                     }
+                }
+
+                // --- Permissions ---
+                val cameraPermission = Manifest.permission.CAMERA
+                val galleryPermission = if (Build.VERSION.SDK_INT >= 33) {
+                    Manifest.permission.READ_MEDIA_IMAGES
+                } else {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
                 }
 
                 val permissionLauncher = rememberLauncherForActivityResult(
@@ -84,7 +108,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // ===== Crossfade navigation =====
+
+
+                // --- Navigation using Crossfade ---
                 Crossfade(
                     targetState = when {
                         showSplash -> "splash"
@@ -106,7 +132,7 @@ class MainActivity : ComponentActivity() {
 
                         "home" -> DashboardScreen(
                             onNavigate = { destination -> currentScreen = destination },
-                            recentImages = lastCapturedBitmap?.let { listOf(it) } ?: emptyList()
+                            recentImages = savedImages
                         )
 
                         "upload" -> UploadScreen(
@@ -117,10 +143,7 @@ class MainActivity : ComponentActivity() {
                         "files" -> FilesScreen(onNavigate = { destination -> currentScreen = destination })
 
                         "camera" -> {
-                            LaunchedEffect(Unit) {
-                                permissionLauncher.launch(arrayOf(cameraPermission))
-                            }
-                            // Optionally, show a placeholder while waiting
+                            LaunchedEffect(Unit) { permissionLauncher.launch(arrayOf(cameraPermission)) }
                             androidx.compose.material3.Text(
                                 "Opening camera...",
                                 modifier = Modifier.padding(16.dp)
@@ -137,5 +160,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+}
+
+// --- Save bitmap to internal storage ---
+fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap): Uri? {
+    return try {
+        val filename = "IMG_${System.currentTimeMillis()}.png"
+        val file = File(context.filesDir, filename)
+        val fos = FileOutputStream(file)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
+        fos.flush()
+        fos.close()
+        Uri.fromFile(file)
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
     }
 }
