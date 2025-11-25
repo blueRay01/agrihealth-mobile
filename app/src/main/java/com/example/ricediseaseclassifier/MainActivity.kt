@@ -1,11 +1,13 @@
 package com.example.ricediseaseclassifier
 
 import android.Manifest
+import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,13 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import com.example.ricediseaseclassifier.ui.theme.RiceDiseaseClassifierTheme
 import android.net.Uri
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
-    // ✅ Keep these as class-level state
     private var lastCapturedBitmap by mutableStateOf<Bitmap?>(null)
     private var lastPrediction by mutableStateOf<PredictionResult?>(null)
     private var currentScreen by mutableStateOf("home")
@@ -40,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 // --- Keep track of captured images ---
                 val savedImages = remember { mutableStateListOf<Bitmap>() }
 
-                // --- Load images from internal storage on startup ---
+                // --- Load existing images from internal storage (optional) ---
                 LaunchedEffect(Unit) {
                     context.filesDir.listFiles()?.forEach { file ->
                         val bmp = BitmapFactory.decodeFile(file.absolutePath)
@@ -51,7 +49,8 @@ class MainActivity : ComponentActivity() {
                 var showSplash by remember { mutableStateOf(true) }
                 var showOnboarding by remember { mutableStateOf(false) }
                 var onboardingFinished by remember { mutableStateOf(false) }
-// --- Camera & Gallery Launchers ---
+
+                // --- Camera & Gallery Launchers ---
                 val cameraLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.TakePicturePreview()
                 ) { bitmap ->
@@ -59,7 +58,8 @@ class MainActivity : ComponentActivity() {
                         lastCapturedBitmap = it
                         lastPrediction = ImageClassifier(context).classify(it)
 
-                        saveBitmapToInternalStorage(context, it)?.let { uri ->
+                        // Save to gallery and dashboard list
+                        saveBitmapToGallery(context, it)?.let { uri ->
                             val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
                             savedBmp?.let { bmp -> savedImages.add(bmp) }
                         }
@@ -77,8 +77,8 @@ class MainActivity : ComponentActivity() {
                         lastPrediction = bitmap?.let { bmp -> ImageClassifier(context).classify(bmp) }
 
                         bitmap?.let { bmp ->
-                            saveBitmapToInternalStorage(context, bmp)?.let { uri ->
-                                val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
+                            saveBitmapToGallery(context, bmp)?.let { savedUri ->
+                                val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(savedUri))
                                 savedBmp?.let { savedImages.add(it) }
                             }
                         }
@@ -163,18 +163,30 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// --- Save bitmap to internal storage ---
-fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap): Uri? {
-    return try {
-        val filename = "IMG_${System.currentTimeMillis()}.png"
-        val file = File(context.filesDir, filename)
-        val fos = FileOutputStream(file)
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
-        fos.flush()
-        fos.close()
-        Uri.fromFile(file)
-    } catch (e: IOException) {
+// --- Save bitmap to gallery ---
+fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Uri? {
+    val filename = "IMG_${System.currentTimeMillis()}.png"
+    var uri: Uri? = null
+
+    try {
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/RiceDiseaseApp")
+        }
+
+        val contentResolver = context.contentResolver
+        uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        uri?.let {
+            contentResolver.openOutputStream(it)?.use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+            }
+        }
+
+    } catch (e: Exception) {
         e.printStackTrace()
-        null
     }
+
+    return uri
 }
