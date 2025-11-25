@@ -22,7 +22,7 @@ class ImageClassifier(private val context: Context) {
         "stem_rot",
         "tungro_virus"
     )
-
+     
     init {
         loadModel()
     }
@@ -36,7 +36,7 @@ class ImageClassifier(private val context: Context) {
         interpreter = Interpreter(buffer)
     }
 
-    fun classify(bitmap: Bitmap): String {
+    fun classify(bitmap: Bitmap): PredictionResult {
         val inputBuffer = preprocessImage(bitmap)
         val outputBuffer = Array(1) { FloatArray(labels.size) }
 
@@ -44,12 +44,31 @@ class ImageClassifier(private val context: Context) {
 
         val predictions = outputBuffer[0]
         val maxIndex = predictions.indices.maxByOrNull { predictions[it] } ?: -1
+
+        if (maxIndex == -1) {
+            return PredictionResult(
+                label = "Unknown",
+                confidence = 0f,
+                isUnknown = true
+            )
+        }
+
         val confidence = predictions[maxIndex] * 100f
 
-        return if (maxIndex != -1)
-            "Predicted: ${labels[maxIndex]} (%.2f%%)".format(confidence)
-        else
-            "Unknown"
+        // If model is very unsure (<20%), treat as unknown
+        if (confidence < 20f) {
+            return PredictionResult(
+                label = "Unknown",
+                confidence = confidence,
+                isUnknown = true
+            )
+        }
+
+        return PredictionResult(
+            label = labels[maxIndex],
+            confidence = confidence,
+            isUnknown = false
+        )
     }
 
     private fun preprocessImage(bitmap: Bitmap): ByteBuffer {

@@ -6,10 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -34,24 +32,29 @@ import com.example.ricediseaseclassifier.ptSansBold
 import com.example.ricediseaseclassifier.calibriRegular
 
 @Composable
-fun UploadScreen(onNavigate: (String) -> Unit) {
-
+fun UploadScreen(
+    onNavigate: (String) -> Unit,
+    onPickFromGallery: () -> Unit
+) {
     var gridMode by remember { mutableStateOf(true) }
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Recent") }
     val dropdownOptions = listOf("Name")
+    val navHeight = 70.dp
 
-    // ⭐ Changed Box → Column for proper scrolling
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF2F2F2))
-            .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 25.dp)
     ) {
 
-        // Wrap the entire scrollable content inside a Column with weight(1f)
-        Column(modifier = Modifier.weight(1f)) {
-
+        // Scrollable content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight)
+                .align(Alignment.TopStart)
+        ) {
             // 🌾 Logo + app name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -83,22 +86,16 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
                     .height(144.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White)
+                    .clickable { onPickFromGallery() }
                     .drawBehind {
                         val strokeWidthPx = 2.dp.toPx()
                         val gapPx = 10.dp.toPx()
-                        val pathEffect = PathEffect.dashPathEffect(
-                            floatArrayOf(strokeWidthPx, gapPx),
-                            0f
-                        )
-
+                        val pathEffect = PathEffect.dashPathEffect(floatArrayOf(strokeWidthPx, gapPx), 0f)
                         drawRoundRect(
                             color = Color.Transparent,
                             topLeft = androidx.compose.ui.geometry.Offset(0f, 0f),
                             size = size,
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(
-                                10.dp.toPx(),
-                                10.dp.toPx()
-                            ),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(10.dp.toPx(), 10.dp.toPx()),
                             style = Stroke(width = strokeWidthPx, pathEffect = pathEffect)
                         )
                     },
@@ -122,7 +119,7 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔽 Recent + grid/list toggle
+            // 🔽 Recent + toggle
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -179,7 +176,7 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 📷 Images grid/list (inside weight(1f) container)
+            // 📷 Images grid/list
             if (gridMode) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -191,7 +188,7 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
                         ImageWithBottomText(
                             imageRes = R.drawable.sample_image,
                             fileName = "Image_$index.jpg",
-                            modifier = Modifier.height(120.dp) // for LazyColumn items
+                            modifier = Modifier.height(120.dp)
                         )
                     }
                 }
@@ -201,26 +198,45 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(20) { index ->
-                        ImageWithBottomText(
-                            imageRes = R.drawable.sample_image,
-                            fileName = "Image_$index.jpg",
-                            modifier = Modifier.height(120.dp) // for LazyColumn items
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sample_image),
+                                contentDescription = "Image Preview",
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Image_$index.jpg",
+                                fontFamily = calibriRegular,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // ⭐ Bottom navigation bar (OUTSIDE scrollable area)
+        // --- Fixed Bottom Nav ---
         Row(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp)
+                .height(navHeight)
                 .background(Color.White, shape = RoundedCornerShape(24.dp))
+                .align(Alignment.BottomCenter)
                 .padding(horizontal = 16.dp)
         ) {
             BottomNavItem(R.drawable.icon1, "Home", modifier = Modifier.weight(1f)) { onNavigate("home") }
@@ -231,8 +247,6 @@ fun UploadScreen(onNavigate: (String) -> Unit) {
         }
     }
 }
-
-
 
 @Composable
 private fun BottomNavItem(
@@ -273,10 +287,8 @@ private fun BottomNavItem(
     }
 }
 
-
-
 @Preview(showBackground = true)
 @Composable
 fun UploadScreenPreview() {
-    UploadScreen(onNavigate = {})
+    UploadScreen(onNavigate = {}, onPickFromGallery = {})
 }

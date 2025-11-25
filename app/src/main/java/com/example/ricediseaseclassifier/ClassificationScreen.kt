@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 fun ClassificationScreen() {
     val context = LocalContext.current
     val classifier = remember { ImageClassifier(context) }
-    var resultText by remember { mutableStateOf("No image selected") }
+    var prediction by remember { mutableStateOf<PredictionResult?>(null) }
     var selectedImage by remember { mutableStateOf<Bitmap?>(null) }
 
     val cameraPermission = Manifest.permission.CAMERA
@@ -39,7 +39,7 @@ fun ClassificationScreen() {
     ) { bitmap ->
         bitmap?.let {
             selectedImage = it
-            resultText = classifier.classify(it)
+            prediction = classifier.classify(it)
         }
     }
 
@@ -50,7 +50,7 @@ fun ClassificationScreen() {
         uri?.let {
             val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(it))
             selectedImage = bitmap
-            resultText = classifier.classify(bitmap)
+            prediction = classifier.classify(bitmap)
         }
     }
 
@@ -99,7 +99,10 @@ fun ClassificationScreen() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = resultText,
+            text = prediction?.let {
+                if (it.isUnknown) "Prediction: Unknown"
+                else "Prediction: ${it.label} (${String.format("%.2f", it.confidence)}%)"
+            } ?: "No image selected",
             style = MaterialTheme.typography.titleMedium,
             textAlign = TextAlign.Center
         )

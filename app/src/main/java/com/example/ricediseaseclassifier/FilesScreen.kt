@@ -35,19 +35,22 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf("Images") }
     val typeOptions = listOf("Images", "Folders")
-
-    val folders =
-        remember { mutableStateListOf("Rice Diseases", "Fertilizer Tips", "Planting Calendar") }
+    val folders = remember { mutableStateListOf("Rice Diseases", "Fertilizer Tips", "Planting Calendar") }
+    val navHeight = 70.dp
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF2F2F2))
-            .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 25.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-
-            // --- your header (logo + title) stays unchanged ---
+        // Scrollable content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight) // leave space for nav
+                .align(Alignment.TopStart)
+        ) {
+            // --- Header ---
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -71,8 +74,7 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- dropdown + toggles unchanged ---
-
+            // --- Dropdown + toggles ---
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -138,10 +140,7 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ------------------------------------------------------------------
-            // 📁 YOUR CONTENT (folders / images) – UNCHANGED, just inside Column
-            // ------------------------------------------------------------------
-
+            // --- Content ---
             if (selectedType == "Folders") {
                 if (gridMode) {
                     LazyVerticalGrid(
@@ -222,47 +221,43 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                     }
                 }
             }
+        }
 
-            // --- ADD SPACING ABOVE BOTTOM NAV (same as Dashboard) ---
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // ------------------------------------------------------------------
-            // BOTTOM NAV — EXACTLY LIKE DASHBOARD
-            // ------------------------------------------------------------------
-            Row(
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .background(Color.White, RoundedCornerShape(24.dp))
-                    .padding(horizontal = 16.dp)
+        // --- Fixed Bottom Nav ---
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(navHeight)
+                .background(Color.White, RoundedCornerShape(24.dp))
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 16.dp)
+        ) {
+            BottomNavItem(R.drawable.icon1, "Home", modifier = Modifier.weight(1f)) {
+                onNavigate("home")
+            }
+            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) {
+                onNavigate("upload")
+            }
+            BottomNavItem(
+                R.drawable.icon3,
+                "Camera",
+                isCentral = true,
+                modifier = Modifier.weight(1.2f)
             ) {
-                BottomNavItem(R.drawable.icon1, "Home", modifier = Modifier.weight(1f)) {
-                    onNavigate("home")
-                }
-                BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) {
-                    onNavigate("upload")
-                }
-                BottomNavItem(
-                    R.drawable.icon3,
-                    "Camera",
-                    isCentral = true,
-                    modifier = Modifier.weight(1.2f)
-                ) {
-                    onNavigate("camera")
-                }
-                BottomNavItem(R.drawable.icon4, "Files", modifier = Modifier.weight(1f)) {
-                    onNavigate("files")
-                }
-                BottomNavItem(
-                    iconRes = 0,
-                    label = "Settings",
-                    useMaterialIcon = true,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    onNavigate("settings")
-                }
+                onNavigate("camera")
+            }
+            BottomNavItem(R.drawable.icon4_active, "Files", modifier = Modifier.weight(1f)) {
+                onNavigate("files")
+            }
+            BottomNavItem(
+                iconRes = 0,
+                label = "Settings",
+                useMaterialIcon = true,
+                modifier = Modifier.weight(1f)
+            ) {
+                onNavigate("settings")
             }
         }
     }
