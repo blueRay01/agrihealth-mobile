@@ -49,8 +49,8 @@ fun HistoryScreen(
     // Sort images based on dropdown selection
     val sortedImages = remember(userImages, sortOrder) {
         when(sortOrder) {
-            "Recent" -> userImages.reversed() // no timestamp, so keep insertion order
-            "Oldest" -> userImages// just reverse the list
+            "Recent" -> userImages // no timestamp, so keep insertion order
+            "Oldest" -> userImages.reversed()// just reverse the list
             else -> userImages
         }
     }
