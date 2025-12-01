@@ -233,10 +233,8 @@ fun DashboardScreen(
                 .padding(horizontal = 16.dp)
         ) {
             BottomNavItem(R.drawable.icon1_active, "Home", modifier = Modifier.weight(1f)) { onNavigate("home") }
-            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) { onNavigate("upload") }
             BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) { onNavigate("camera") }
-            BottomNavItem(R.drawable.icon4, "Files", modifier = Modifier.weight(1f)) { onNavigate("files") }
-            BottomNavItem(iconRes = 0, label = "Settings", useMaterialIcon = true, modifier = Modifier.weight(1f)) { onNavigate("settings") }
+            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) { onNavigate("upload") }
         }
     }
 }
@@ -280,7 +278,47 @@ private fun BottomNavItem(
     }
 }
 
+@Composable
+fun ImageWithBottomText(
+    bitmap: Bitmap,
+    fileName: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(3f / 4f)
+            .clip(RoundedCornerShape(12.dp))
+    ) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = fileName,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
 
+        // Bottom overlay with 20% opacity
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(24.dp)
+                .align(Alignment.BottomCenter)
+                .background(Color.Black.copy(alpha = 0.2f))
+        )
+
+        Text(
+            text = fileName,
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
+    }
+}
 
 //@Preview(showBackground = true)
 //@Composable
