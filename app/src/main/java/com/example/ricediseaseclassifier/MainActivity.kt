@@ -5,6 +5,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,13 +21,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.padding
 import com.example.ricediseaseclassifier.ui.theme.RiceDiseaseClassifierTheme
-import android.net.Uri
 
 class MainActivity : ComponentActivity() {
 
     private var lastCapturedBitmap by mutableStateOf<Bitmap?>(null)
     private var lastPrediction by mutableStateOf<PredictionResult?>(null)
-    private var currentScreen by mutableStateOf("home")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,22 +34,28 @@ class MainActivity : ComponentActivity() {
             RiceDiseaseClassifierTheme {
                 val context = LocalContext.current
 
-                // --- Keep track of captured images ---
-                val savedImages = remember { mutableStateListOf<Bitmap>() }
+                // --- SharedPreferences: check onboarding ---
+                val sharedPref = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+                val hasSeenOnboarding = remember { sharedPref.getBoolean("has_seen_onboarding", false) }
 
-                // --- Load existing images from internal storage (optional) ---
+                // --- App state ---
+                var showSplash by remember { mutableStateOf(true) }
+                var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding) }
+                var currentScreen by remember { mutableStateOf("home") }
+
+                // --- Captured images ---
+                val savedImages = remember { mutableStateListOf<Pair<Bitmap, String>>() }
+
+                // Load images from internal storage
                 LaunchedEffect(Unit) {
                     context.filesDir.listFiles()?.forEach { file ->
-                        val bmp = BitmapFactory.decodeFile(file.absolutePath)
-                        bmp?.let { savedImages.add(it) }
+                        BitmapFactory.decodeFile(file.absolutePath)?.let { bmp ->
+                            savedImages.add(bmp to file.name)
+                        }
                     }
                 }
 
-                var showSplash by remember { mutableStateOf(true) }
-                var showOnboarding by remember { mutableStateOf(false) }
-                var onboardingFinished by remember { mutableStateOf(false) }
-
-                // --- Camera & Gallery Launchers ---
+                // --- Camera launcher ---
                 val cameraLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.TakePicturePreview()
                 ) { bitmap ->
@@ -58,16 +63,17 @@ class MainActivity : ComponentActivity() {
                         lastCapturedBitmap = it
                         lastPrediction = ImageClassifier(context).classify(it)
 
-                        // Save to gallery and dashboard list
-                        saveBitmapToGallery(context, it)?.let { uri ->
-                            val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(uri))
-                            savedBmp?.let { bmp -> savedImages.add(bmp) }
+                        val uri = saveBitmapToGallery(context, it)
+                        uri?.let { _ ->
+                            val fileName = "IMG_${System.currentTimeMillis()}.png"
+                            savedImages.add(it to fileName)
                         }
 
                         currentScreen = "result"
                     }
                 }
 
+                // --- Gallery launcher ---
                 val galleryLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.GetContent()
                 ) { uri ->
@@ -77,9 +83,10 @@ class MainActivity : ComponentActivity() {
                         lastPrediction = bitmap?.let { bmp -> ImageClassifier(context).classify(bmp) }
 
                         bitmap?.let { bmp ->
-                            saveBitmapToGallery(context, bmp)?.let { savedUri ->
-                                val savedBmp = BitmapFactory.decodeStream(context.contentResolver.openInputStream(savedUri))
-                                savedBmp?.let { savedImages.add(it) }
+                            val savedUri = saveBitmapToGallery(context, bmp)
+                            savedUri?.let { _ ->
+                                val fileName = "IMG_${System.currentTimeMillis()}.png"
+                                savedImages.add(bmp to fileName)
                             }
                         }
 
@@ -89,59 +96,50 @@ class MainActivity : ComponentActivity() {
 
                 // --- Permissions ---
                 val cameraPermission = Manifest.permission.CAMERA
-                val galleryPermission = if (Build.VERSION.SDK_INT >= 33) {
-                    Manifest.permission.READ_MEDIA_IMAGES
-                } else {
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                }
+                val galleryPermission = if (Build.VERSION.SDK_INT >= 33)
+                    Manifest.permission.READ_MEDIA_IMAGES else Manifest.permission.READ_EXTERNAL_STORAGE
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
-                    val cameraGranted = permissions[cameraPermission] ?: false
-                    val galleryGranted = permissions[galleryPermission] ?: false
-
                     when {
-                        cameraGranted -> cameraLauncher.launch(null)
-                        galleryGranted -> galleryLauncher.launch("image/*")
+                        permissions[cameraPermission] == true -> cameraLauncher.launch(null)
+                        permissions[galleryPermission] == true -> galleryLauncher.launch("image/*")
                         else -> Toast.makeText(context, "Required permission denied", Toast.LENGTH_SHORT).show()
                     }
                 }
 
-
-
-                // --- Navigation using Crossfade ---
+                // --- App navigation ---
                 Crossfade(
                     targetState = when {
                         showSplash -> "splash"
-                        showOnboarding && !onboardingFinished -> "onboarding"
+                        showOnboarding -> "onboarding"
                         else -> currentScreen
                     }
-                ) { target ->
-                    when (target) {
+                ) { screen ->
+                    when (screen) {
                         "splash" -> SplashScreen(onTimeout = { showSplash = false })
-
                         "onboarding" -> OnboardingScreens(onFinish = {
-                            val sharedPref = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
                             with(sharedPref.edit()) {
                                 putBoolean("has_seen_onboarding", true)
                                 apply()
                             }
-                            onboardingFinished = true
+                            showOnboarding = false
+                            currentScreen = "home"
                         })
-
                         "home" -> DashboardScreen(
                             onNavigate = { destination -> currentScreen = destination },
                             recentImages = savedImages
                         )
-
                         "upload" -> UploadScreen(
                             onNavigate = { destination -> currentScreen = destination },
-                            onPickFromGallery = { permissionLauncher.launch(arrayOf(galleryPermission)) }
+                            onPickFromGallery = { permissionLauncher.launch(arrayOf(galleryPermission)) },
+                            userImages = savedImages
                         )
-
-                        "files" -> FilesScreen(onNavigate = { destination -> currentScreen = destination })
-
+                        "files" -> FilesScreen(
+                            onNavigate = { destination -> currentScreen = destination },
+                            savedImages = savedImages
+                        )
                         "camera" -> {
                             LaunchedEffect(Unit) { permissionLauncher.launch(arrayOf(cameraPermission)) }
                             androidx.compose.material3.Text(
@@ -149,7 +147,6 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
-
                         "result" -> ResultScreen(
                             bitmap = lastCapturedBitmap,
                             result = lastPrediction,
@@ -161,32 +158,43 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-// --- Save bitmap to gallery ---
-fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Uri? {
-    val filename = "IMG_${System.currentTimeMillis()}.png"
-    var uri: Uri? = null
-
-    try {
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-            put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/RiceDiseaseApp")
-        }
-
-        val contentResolver = context.contentResolver
-        uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-        uri?.let {
-            contentResolver.openOutputStream(it)?.use { outputStream ->
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+    // --- Save bitmap to internal storage (optional backup) ---
+    private fun saveBitmapToInternalStorage(context: Context, bitmap: Bitmap, fileName: String) {
+        try {
+            context.openFileOutput(fileName, Context.MODE_PRIVATE).use { fos ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos)
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
 
-    return uri
+    // --- Save bitmap to Gallery ---
+    private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Uri? {
+        val filename = "IMG_${System.currentTimeMillis()}.png"
+        var uri: Uri? = null
+
+        try {
+            val contentValues = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/RiceDiseaseApp")
+            }
+
+            val contentResolver = context.contentResolver
+            uri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+            uri?.let {
+                contentResolver.openOutputStream(it)?.use { outputStream ->
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
+                }
+            }
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        return uri
+    }
 }

@@ -1,12 +1,12 @@
 package com.example.ricediseaseclassifier
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -22,20 +22,25 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.example.ricediseaseclassifier.ptSansBold
 import com.example.ricediseaseclassifier.calibriRegular
-import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
-fun FilesScreen(onNavigate: (String) -> Unit) {
+fun FilesScreen(
+    onNavigate: (String) -> Unit,
+    savedImages: List<Pair<Bitmap, String>>      // <-- now receives real images
+) {
     var gridMode by remember { mutableStateOf(true) }
     var expanded by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf("Images") }
+
     val typeOptions = listOf("Images", "Folders")
     val folders = remember { mutableStateListOf("Rice Diseases", "Fertilizer Tips", "Planting Calendar") }
+
     val navHeight = 70.dp
 
     Box(
@@ -43,14 +48,13 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
             .fillMaxSize()
             .background(Color(0xFFF2F2F2))
     ) {
-        // Scrollable content
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight) // leave space for nav
-                .align(Alignment.TopStart)
+                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight)
         ) {
-            // --- Header ---
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -74,12 +78,12 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Dropdown + toggles ---
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable { expanded = true }
@@ -90,13 +94,16 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                         fontSize = 20.sp,
                         color = Color(0xFF333333)
                     )
+
                     Spacer(modifier = Modifier.width(4.dp))
+
                     Icon(
                         imageVector = Icons.Filled.ArrowDropDown,
                         contentDescription = "Dropdown",
                         tint = Color(0xFF333333),
                         modifier = Modifier.size(20.dp)
                     )
+
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
@@ -140,8 +147,60 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Content ---
-            if (selectedType == "Folders") {
+            // ----------------------------------------------------------------------
+            //                          FILES SECTION
+            // ----------------------------------------------------------------------
+            if (selectedType == "Images") {
+
+                if (savedImages.isEmpty()) {
+                    Text(
+                        text = "No images yet.",
+                        modifier = Modifier.padding(top = 40.dp),
+                        fontSize = 16.sp,
+                        color = Color.Gray
+                    )
+                }
+
+                // 🔶 GRID MODE
+                if (gridMode) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(savedImages.size) { index ->
+                            val (bitmap, name) = savedImages[index]
+                            ImageWithBottomText(
+                                bitmap = bitmap,
+                                fileName = name,
+                                modifier = Modifier.height(150.dp)   // or any height you want
+                            )
+                        }
+                    }
+
+                    // 🔶 LIST MODE
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        items(savedImages.size) { index ->
+                            val (bitmap, name) = savedImages[index]
+                            ImageWithBottomText(
+                                bitmap = bitmap,
+                                fileName = name,
+                                modifier = Modifier.height(150.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ----------------------------------------------------------------------
+            //                         FOLDER SECTION
+            // ----------------------------------------------------------------------
+            else {
                 if (gridMode) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -156,7 +215,7 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                                     .aspectRatio(1f)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(Color(0xFFBCE0A9))
-                                    .clickable { onNavigate("folder_contents:${folders[index]}") },
+                                    .clickable { onNavigate("folder:${folders[index]}") },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -179,7 +238,7 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                                     .height(120.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(Color(0xFFBCE0A9))
-                                    .clickable { onNavigate("folder_contents:${folders[index]}") },
+                                    .clickable { onNavigate("folder:${folders[index]}") },
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
@@ -191,39 +250,12 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                         }
                     }
                 }
-            } else {
-                if (gridMode) {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(3),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        items(30) { index ->
-                            ImageWithBottomText(
-                                imageRes = R.drawable.sample_image,
-                                fileName = "Image_$index.jpg"
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        items(20) { index ->
-                            ImageWithBottomText(
-                                imageRes = R.drawable.sample_image,
-                                fileName = "Image_$index.jpg",
-                                modifier = Modifier.height(120.dp)
-                            )
-                        }
-                    }
-                }
             }
         }
 
-        // --- Fixed Bottom Nav ---
+        // ----------------------------------------------------------------------
+        //                           BOTTOM NAV
+        // ----------------------------------------------------------------------
         Row(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
@@ -234,36 +266,18 @@ fun FilesScreen(onNavigate: (String) -> Unit) {
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 16.dp)
         ) {
-            BottomNavItem(R.drawable.icon1, "Home", modifier = Modifier.weight(1f)) {
-                onNavigate("home")
-            }
-            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) {
-                onNavigate("upload")
-            }
-            BottomNavItem(
-                R.drawable.icon3,
-                "Camera",
-                isCentral = true,
-                modifier = Modifier.weight(1.2f)
-            ) {
-                onNavigate("camera")
-            }
-            BottomNavItem(R.drawable.icon4_active, "Files", modifier = Modifier.weight(1f)) {
-                onNavigate("files")
-            }
-            BottomNavItem(
-                iconRes = 0,
-                label = "Settings",
-                useMaterialIcon = true,
-                modifier = Modifier.weight(1f)
-            ) {
+            BottomNavItem(R.drawable.icon1, "Home") { onNavigate("home") }
+            BottomNavItem(R.drawable.icon2, "Upload") { onNavigate("upload") }
+            BottomNavItem(R.drawable.icon3, "Camera", isCentral = true) { onNavigate("camera") }
+            BottomNavItem(R.drawable.icon4_active, "Files") { onNavigate("files") }
+            BottomNavItem(iconRes = 0, label = "Settings", useMaterialIcon = true) {
                 onNavigate("settings")
             }
         }
     }
 }
 
-    @Composable
+@Composable
 private fun BottomNavItem(
     iconRes: Int,
     label: String,
@@ -303,8 +317,8 @@ private fun BottomNavItem(
 }
 
 
-@Preview(showBackground = true)
-@Composable
-fun FilesScreenPreview() {
-    FilesScreen(onNavigate = {})
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun FilesScreenPreview() {
+//    FilesScreen(onNavigate = {})
+//}

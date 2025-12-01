@@ -23,19 +23,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ricediseaseclassifier.ptSansBold
 import com.example.ricediseaseclassifier.calibriRegular
-import com.example.ricediseaseclassifier.BackgroundGray
-import com.example.ricediseaseclassifier.PrimaryGreen
-import com.example.ricediseaseclassifier.ImageWithBottomText
 
 @Composable
 fun DashboardScreen(
     onNavigate: (String) -> Unit,
-    recentImages: List<Bitmap> = emptyList()
+    recentImages: List<Pair<Bitmap, String>> = emptyList()
 ) {
     var gridMode by remember { mutableStateOf(true) }
     var expanded by remember { mutableStateOf(false) }
@@ -177,11 +173,8 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Images grid/list including recent capture
-            val imagesList = recentImages.toMutableList()
-            //recentImage?.let { imagesList.add(it) } // only add recent capture if it exists
-
-            if (imagesList.isNotEmpty()) {
+            // 🔹 Images grid/list
+            if (recentImages.isNotEmpty()) {
                 if (gridMode) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -189,15 +182,12 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        items(imagesList.size) { index ->
-                            val item = imagesList[index]
-                            Image(
-                                bitmap = item.asImageBitmap(),
-                                contentDescription = "Image $index",
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
+                        items(recentImages.size) { index ->
+                            val (bitmap, fileName) = recentImages[index]
+                            ImageWithBottomText(
+                                bitmap = bitmap,
+                                fileName = fileName,
+                                modifier = Modifier.size(120.dp)
                             )
                         }
                     }
@@ -206,23 +196,32 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.weight(1f)
                     ) {
-                        items(imagesList.size) { index ->
-                            val item = imagesList[index]
-                            Image(
-                                bitmap = item.asImageBitmap(),
-                                contentDescription = "Image $index",
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
-                            )
+                        items(recentImages.size) { index ->
+                            val (bitmap, fileName) = recentImages[index]
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = fileName,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = fileName,
+                                    fontSize = 12.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
-        // 🏠 Fixed bottom navigation
+        // 🏠 Bottom navigation
         Row(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
@@ -233,21 +232,11 @@ fun DashboardScreen(
                 .align(Alignment.BottomCenter)
                 .padding(horizontal = 16.dp)
         ) {
-            BottomNavItem(R.drawable.icon1_active, "Home", modifier = Modifier.weight(1f)) {
-                onNavigate("home")
-            }
-            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) {
-                onNavigate("upload")
-            }
-            BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) {
-                onNavigate("camera")
-            }
-            BottomNavItem(R.drawable.icon4, "Files", modifier = Modifier.weight(1f)) {
-                onNavigate("files")
-            }
-            BottomNavItem(iconRes = 0, label = "Settings", useMaterialIcon = true, modifier = Modifier.weight(1f)) {
-                onNavigate("settings")
-            }
+            BottomNavItem(R.drawable.icon1_active, "Home", modifier = Modifier.weight(1f)) { onNavigate("home") }
+            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) { onNavigate("upload") }
+            BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) { onNavigate("camera") }
+            BottomNavItem(R.drawable.icon4, "Files", modifier = Modifier.weight(1f)) { onNavigate("files") }
+            BottomNavItem(iconRes = 0, label = "Settings", useMaterialIcon = true, modifier = Modifier.weight(1f)) { onNavigate("settings") }
         }
     }
 }
@@ -291,8 +280,8 @@ private fun BottomNavItem(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun DashboardScreenPreview() {
-    DashboardScreen(onNavigate = {})
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun DashboardScreenPreview() {
+//    DashboardScreen(onNavigate = {})
+//}
