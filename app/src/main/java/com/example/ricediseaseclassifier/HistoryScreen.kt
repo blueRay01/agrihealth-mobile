@@ -35,8 +35,7 @@ data class UserImage(
     val bitmap: Bitmap,
     val fileName: String,
     val result: String,
-    val confidence: Float,
-    val timestamp: Long
+    val confidence: Float
 )
 
 @Composable
@@ -49,10 +48,10 @@ fun HistoryScreen(
 
     // Sort images based on dropdown selection
     val sortedImages = remember(userImages, sortOrder) {
-        if (sortOrder == "Recent") {
-            userImages.sortedByDescending { it.timestamp }
-        } else {
-            userImages.sortedBy { it.timestamp }
+        when(sortOrder) {
+            "Recent" -> userImages.reversed() // no timestamp, so keep insertion order
+            "Oldest" -> userImages// just reverse the list
+            else -> userImages
         }
     }
 
