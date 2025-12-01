@@ -137,8 +137,8 @@ class MainActivity : ComponentActivity() {
                             userImages = savedImages
                         )
                         "files" -> FilesScreen(
-                            onNavigate = { destination -> currentScreen = destination },
-                            savedImages = savedImages
+                            context = context,
+                            onNavigate = { destination -> currentScreen = destination }
                         )
                         "camera" -> {
                             LaunchedEffect(Unit) { permissionLauncher.launch(arrayOf(cameraPermission)) }
