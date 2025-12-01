@@ -48,11 +48,8 @@ class MainActivity : ComponentActivity() {
 
                 // Load images from internal storage
                 LaunchedEffect(Unit) {
-                    context.filesDir.listFiles()?.forEach { file ->
-                        BitmapFactory.decodeFile(file.absolutePath)?.let { bmp ->
-                            savedImages.add(bmp to file.name)
-                        }
-                    }
+                    savedImages.clear()
+                    savedImages.addAll(loadAllGalleryImages(context))
                 }
 
                 // --- Camera launcher ---
@@ -83,10 +80,11 @@ class MainActivity : ComponentActivity() {
                         lastPrediction = bitmap?.let { bmp -> ImageClassifier(context).classify(bmp) }
 
                         bitmap?.let { bmp ->
-                            val savedUri = saveBitmapToGallery(context, bmp)
-                            savedUri?.let { _ ->
-                                val fileName = "IMG_${System.currentTimeMillis()}.png"
-                                savedImages.add(bmp to fileName)
+                            val savedUri = saveBitmapToGallery(context, bitmap)
+                            savedUri?.let {
+                                // reload all gallery images so Dashboard and Upload are in sync
+                                savedImages.clear()
+                                savedImages.addAll(loadAllGalleryImages(context))
                             }
                         }
 
@@ -196,5 +194,35 @@ class MainActivity : ComponentActivity() {
         }
 
         return uri
+    }
+    fun loadAllGalleryImages(context: Context, folder: String = "RiceDiseaseApp"): List<Pair<Bitmap, String>> {
+        val images = mutableListOf<Pair<Bitmap, String>>()
+        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME)
+        val selection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?" else null
+        val selectionArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+            arrayOf("%$folder%") else null
+
+        context.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            selection,
+            selectionArgs,
+            "${MediaStore.Images.Media.DATE_ADDED} DESC"
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idCol)
+                val name = cursor.getString(nameCol)
+                val contentUri = Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                val bitmap = context.contentResolver.openInputStream(contentUri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                }
+                bitmap?.let { images.add(it to name) }
+            }
+        }
+
+        return images
     }
 }
