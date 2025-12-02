@@ -2,6 +2,8 @@ package com.example.ricediseaseclassifier
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.shadow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -203,7 +206,7 @@ fun DashboardScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No images yet. Tap the button above to add.",
+                        text = "No images yet.",
                         fontFamily = calibriRegular,
                         fontSize = 16.sp,
                         color = Color.Gray,
@@ -213,24 +216,66 @@ fun DashboardScreen(
             }
         }
 
-        // 🏠 Bottom navigation
-        Row(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
+        // 🟢 Figma-style Floating Bottom Navigation
+        // 🟢 Figma-style Floating Bottom Navigation with “illusion” bulging camera
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(navHeight)
-                .background(Color.White, shape = RoundedCornerShape(24.dp))
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 16.dp)
+                .padding(bottom = 10.dp)
+                .align(Alignment.BottomCenter),
+            contentAlignment = Alignment.Center
         ) {
-            BottomNavItem(R.drawable.icon1_active, "Home", modifier = Modifier.weight(1f)) { onNavigate("home") }
-            BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) { onNavigate("camera") }
-            BottomNavItem(R.drawable.icon2, "History", modifier = Modifier.weight(1f)) { onNavigate("history") }
-        }
-    }
-}
+            // Bottom Navigation with bigger camera icon
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.BottomCenter),
+                contentAlignment = Alignment.Center
+            ) {
+                // Main white pill
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 60.dp) // space from screen edges
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                ) {
+                    BottomNavItem(
+                        iconRes = R.drawable.icon1_active,
+                        label = "Home",
+                        modifier = Modifier.weight(1f)
+                    ) { onNavigate("home") }
 
+                    Spacer(modifier = Modifier.width(64.dp)) // leave space for camera icon
+
+                    BottomNavItem(
+                        iconRes = R.drawable.icon2,
+                        label = "History",
+                        modifier = Modifier.weight(1f)
+                    ) { onNavigate("history") }
+                }
+
+                // Fixed-position larger camera icon
+                Image(
+                    painter = painterResource(id = R.drawable.icon3),
+                    contentDescription = "Camera",
+                    modifier = Modifier
+                        .size(80.dp) // bigger than other icons
+                        .align(Alignment.Center)
+                        .offset(y = (-5).dp) // optional: slightly above the pill
+                        .clickable { onNavigate("camera") }
+                )
+            }
+        }
+
+
+
+        }
+}
 @Composable
 private fun BottomNavItem(
     iconRes: Int,

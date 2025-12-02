@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -74,11 +75,15 @@ class MainActivity : ComponentActivity() {
                 val cameraLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.TakePicturePreview()
                 ) { bitmap ->
-                    bitmap?.let { bmp ->
-                        handleNewImage(context, bmp, savedImages)
+                    if (bitmap != null) {
+                        handleNewImage(context, bitmap, savedImages)
                         currentScreen = "result"
+                    } else {
+                        // User pressed back or cancelled -> navigate to home
+                        currentScreen = "home"
                     }
                 }
+
 
                 // --- Gallery launcher ---
                 val galleryLauncher = rememberLauncherForActivityResult(
@@ -147,13 +152,22 @@ class MainActivity : ComponentActivity() {
                             )
 
                         "camera" -> {
+                            // Launch permission once when entering this screen
                             LaunchedEffect(Unit) {
-                                permissionLauncher.launch(arrayOf(cameraPermission))
+                                val granted = arrayOf(cameraPermission)
+                                permissionLauncher.launch(granted)
                             }
+
+                            // Show placeholder while camera opens
                             androidx.compose.material3.Text(
                                 "Opening camera...",
                                 modifier = Modifier.padding(16.dp)
                             )
+
+                            // Handle system back while in camera screen
+                            BackHandler {
+                                currentScreen = "home"
+                            }
                         }
 
                         "result" ->

@@ -44,13 +44,12 @@ fun HistoryScreen(
     userImages: SnapshotStateList<UserImage>
 ) {
     var sortOrder by remember { mutableStateOf("Recent") }
-    val navHeight = 70.dp
 
     // Sort images based on dropdown selection
     val sortedImages = remember(userImages, sortOrder) {
         when(sortOrder) {
-            "Recent" -> userImages // no timestamp, so keep insertion order
-            "Oldest" -> userImages.reversed()// just reverse the list
+            "Recent" -> userImages
+            "Oldest" -> userImages.reversed()
             else -> userImages
         }
     }
@@ -63,8 +62,7 @@ fun HistoryScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight)
-                .align(Alignment.TopStart)
+                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 100.dp) // leave space for nav
         ) {
             // 🌾 Logo + App Name
             Row(
@@ -94,7 +92,7 @@ fun HistoryScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔽 Sort dropdown: Recent / Oldest
+            // 🔽 Sort dropdown
             var expanded by remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier
@@ -108,7 +106,7 @@ fun HistoryScreen(
                     Text(
                         text = sortOrder,
                         fontFamily = calibriRegular,
-                        fontSize = 20.sp,     // match dashboard
+                        fontSize = 20.sp,
                         color = Color(0xFF333333),
                         fontWeight = FontWeight.Normal
                     )
@@ -179,73 +177,71 @@ fun HistoryScreen(
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 50.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    //
+                    Text(
+                        text = "No history yet.",
+                        fontFamily = calibriRegular,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
 
-        // 🏠 Bottom navigation
-        Row(
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
+        // 🟢 Figma-style Floating Bottom Navigation
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(navHeight)
-                .background(Color.White, shape = RoundedCornerShape(24.dp))
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 16.dp)
+                .padding(bottom = 15.dp)
+                .align(Alignment.BottomCenter),
+            contentAlignment = Alignment.Center
         ) {
-            BottomNavItem(R.drawable.icon1, "Home", modifier = Modifier.weight(1f)) {
-                onNavigate("home")
+            // Main pill
+            Row(
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 60.dp)
+                    .height(70.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+            ) {
+                BottomNavItem(
+                    iconRes = R.drawable.icon1,
+                    label = "Home",
+                    modifier = Modifier.weight(1f)
+                ) { onNavigate("home") }
+
+                Spacer(modifier = Modifier.width(64.dp)) // space for camera
+
+                BottomNavItem(
+                    iconRes = R.drawable.icon2,
+                    label = "History",
+                    modifier = Modifier.weight(1f)
+                ) { onNavigate("history") }
             }
-            BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) {
-                onNavigate("camera")
-            }
-            BottomNavItem(R.drawable.icon2, "History", modifier = Modifier.weight(1f)) {
-                onNavigate("history")
-            }
+
+            // Larger central camera icon
+            Image(
+                painter = painterResource(id = R.drawable.icon3),
+                contentDescription = "Camera",
+                modifier = Modifier
+                    .size(80.dp)
+                    .align(Alignment.Center)
+                    .offset(y = (-5).dp)
+                    .clickable { onNavigate("camera") }
+            )
         }
     }
 }
 
-
-@Composable
-fun ImageWithResult(item: UserImage, modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .aspectRatio(3f / 4f)
-            .clip(RoundedCornerShape(12.dp))
-    ) {
-        Image(
-            bitmap = item.bitmap.asImageBitmap(),
-            contentDescription = item.fileName,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(24.dp)
-                .align(Alignment.BottomCenter)
-                .background(Color.Black.copy(alpha = 0.2f))
-        )
-        Text(
-            text = "${item.fileName} - ${item.result}",
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 4.dp, vertical = 2.dp),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 @Composable
 private fun BottomNavItem(
