@@ -122,37 +122,33 @@ fun DashboardScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // 🔹 Images title + grid/list toggle
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { expanded = true }
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = selectedOption,
+                        text = "Images",
                         fontFamily = calibriRegular,
-                        fontSize = 20.sp,
+                        fontSize = 20.sp,       // same as before
                         color = Color(0xFF333333),
                         fontWeight = FontWeight.Normal
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = "Dropdown",
-                        tint = Color(0xFF333333),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+
+                    // Grid/List toggle button
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clickable { gridMode = !gridMode },
+                        contentAlignment = Alignment.Center
                     ) {
-                        dropdownOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    selectedOption = option
-                                    expanded = false
-                                }
-                            )
-                        }
+                        val icon = if (gridMode) R.drawable.icon_grid else R.drawable.icon_list
+                        Image(
+                            painter = painterResource(id = icon),
+                            contentDescription = "Toggle Grid/List",
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
@@ -234,7 +230,7 @@ fun DashboardScreen(
         ) {
             BottomNavItem(R.drawable.icon1_active, "Home", modifier = Modifier.weight(1f)) { onNavigate("home") }
             BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) { onNavigate("camera") }
-            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) { onNavigate("upload") }
+            BottomNavItem(R.drawable.icon2, "History", modifier = Modifier.weight(1f)) { onNavigate("history") }
         }
     }
 }

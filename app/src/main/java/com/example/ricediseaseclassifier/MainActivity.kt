@@ -178,7 +178,7 @@ class MainActivity : ComponentActivity() {
                                 recentImages = savedImages.map { it.bitmap to it.fileName }.toMutableStateList()
                             )
 
-                        "upload" ->
+                        "history" ->
                             HistoryScreen(
                                 userImages = savedImages,
                                 onNavigate = { currentScreen = it }

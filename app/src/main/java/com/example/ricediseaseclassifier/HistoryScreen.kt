@@ -108,8 +108,9 @@ fun HistoryScreen(
                     Text(
                         text = sortOrder,
                         fontFamily = calibriRegular,
-                        fontSize = 16.sp,
-                        color = Color(0xFF333333)
+                        fontSize = 20.sp,     // match dashboard
+                        color = Color(0xFF333333),
+                        fontWeight = FontWeight.Normal
                     )
                     Icon(
                         imageVector = Icons.Filled.ArrowDropDown,
@@ -181,13 +182,7 @@ fun HistoryScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "No images yet.",
-                        fontFamily = calibriRegular,
-                        fontSize = 16.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center
-                    )
+                    //
                 }
             }
         }
@@ -209,8 +204,8 @@ fun HistoryScreen(
             BottomNavItem(R.drawable.icon3, "Camera", isCentral = true, modifier = Modifier.weight(1.2f)) {
                 onNavigate("camera")
             }
-            BottomNavItem(R.drawable.icon2, "Upload", modifier = Modifier.weight(1f)) {
-                onNavigate("upload")
+            BottomNavItem(R.drawable.icon2, "History", modifier = Modifier.weight(1f)) {
+                onNavigate("history")
             }
         }
     }
