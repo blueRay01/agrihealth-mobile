@@ -52,19 +52,19 @@ class MainActivity : ComponentActivity() {
 
                 val savedImages = remember { mutableStateListOf<UserImage>() }
 
-                // --- Load persisted predictions + bitmaps ---
+                // --- Load persisted predictions + images from folder ---
                 LaunchedEffect(Unit) {
                     savedImages.clear()
-                    val predictionsMap = loadPredictions(context)
+                    val predictions = loadPredictions(context)
 
                     loadAllGalleryImages(context).forEach { (bitmap, fileName) ->
-                        val prediction = predictionsMap[fileName]
+                        val pred = predictions[fileName]
                         savedImages.add(
                             UserImage(
                                 bitmap = bitmap,
                                 fileName = fileName,
-                                result = prediction?.label ?: "Unknown",
-                                confidence = prediction?.confidence ?: 0f
+                                result = pred?.label ?: "Unknown",
+                                confidence = pred?.confidence ?: 0f
                             )
                         )
                     }
@@ -74,25 +74,8 @@ class MainActivity : ComponentActivity() {
                 val cameraLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.TakePicturePreview()
                 ) { bitmap ->
-                    bitmap?.let {
-                        val prediction = ImageClassifier(context).classify(it)
-                        lastCapturedBitmap = it
-                        lastPrediction = prediction
-
-                        val (savedUri, fileName) = saveBitmapToGallery(context, it)
-
-                        if (savedUri != null && fileName != null) {
-                            savedImages.add(
-                                UserImage(
-                                    bitmap = it,
-                                    fileName = fileName,
-                                    result = prediction?.label ?: "Unknown",
-                                    confidence = prediction?.confidence ?: 0f
-                                )
-                            )
-                            savePrediction(context, fileName, prediction)
-                        }
-
+                    bitmap?.let { bmp ->
+                        handleNewImage(context, bmp, savedImages)
                         currentScreen = "result"
                     }
                 }
@@ -102,54 +85,29 @@ class MainActivity : ComponentActivity() {
                     contract = ActivityResultContracts.GetContent()
                 ) { uri ->
                     uri?.let {
-                        val bitmap = BitmapFactory.decodeStream(
+                        val bmp = BitmapFactory.decodeStream(
                             context.contentResolver.openInputStream(it)
                         )
-
-                        bitmap?.let { bmp ->
-                            val prediction = ImageClassifier(context).classify(bmp)
-                            lastCapturedBitmap = bmp
-                            lastPrediction = prediction
-
-                            val (savedUri, fileName) = saveBitmapToGallery(context, bmp)
-
-                            if (savedUri != null && fileName != null) {
-                                savedImages.add(
-                                    UserImage(
-                                        bitmap = bmp,
-                                        fileName = fileName,
-                                        result = prediction?.label ?: "Unknown",
-                                        confidence = prediction?.confidence ?: 0f
-                                    )
-                                )
-                                savePrediction(context, fileName, prediction)
-                            }
-
+                        bmp?.let { bitmap ->
+                            handleNewImage(context, bitmap, savedImages)
                             currentScreen = "result"
                         }
                     }
                 }
 
-                // --- Permissions ---
+                // --- Permission handling ---
                 val cameraPermission = Manifest.permission.CAMERA
                 val galleryPermission =
-                    if (Build.VERSION.SDK_INT >= 33)
-                        Manifest.permission.READ_MEDIA_IMAGES
-                    else
-                        Manifest.permission.READ_EXTERNAL_STORAGE
+                    if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES
+                    else Manifest.permission.READ_EXTERNAL_STORAGE
 
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
                     when {
-                        permissions[cameraPermission] == true ->
-                            cameraLauncher.launch(null)
-
-                        permissions[galleryPermission] == true ->
-                            galleryLauncher.launch("image/*")
-
-                        else ->
-                            Toast.makeText(context, "Required permission denied", Toast.LENGTH_SHORT).show()
+                        permissions[cameraPermission] == true -> cameraLauncher.launch(null)
+                        permissions[galleryPermission] == true -> galleryLauncher.launch("image/*")
+                        else -> Toast.makeText(context, "Required permission denied", Toast.LENGTH_SHORT).show()
                     }
                 }
 
@@ -175,7 +133,11 @@ class MainActivity : ComponentActivity() {
                         "home" ->
                             DashboardScreen(
                                 onNavigate = { currentScreen = it },
-                                recentImages = savedImages.map { it.bitmap to it.fileName }.toMutableStateList()
+                                recentImages = savedImages,
+                                onUploadRequest = {
+                                    // When user taps the upload button on home screen
+                                    galleryLauncher.launch("image/*")
+                                }
                             )
 
                         "history" ->
@@ -207,46 +169,76 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // --- Save prediction ---
+    // -----------------------------
+    // Unified logic for new images
+    // -----------------------------
+    private fun handleNewImage(
+        context: Context,
+        bitmap: Bitmap,
+        savedImages: MutableList<UserImage>
+    ) {
+        val prediction = ImageClassifier(context).classify(bitmap)
+
+        lastCapturedBitmap = bitmap
+        lastPrediction = prediction
+
+        val (uri, fileName) = saveBitmapToGallery(context, bitmap)
+
+        if (uri != null && fileName != null) {
+            savedImages.add(
+                UserImage(
+                    bitmap = bitmap,
+                    fileName = fileName,
+                    result = prediction?.label ?: "Unknown",
+                    confidence = prediction?.confidence ?: 0f
+                )
+            )
+            savePrediction(context, fileName, prediction)
+        }
+    }
+
+    // -----------------------------
+    // Save prediction
+    // -----------------------------
     private fun savePrediction(context: Context, fileName: String, prediction: PredictionResult?) {
         if (prediction == null) return
 
         val file = File(context.filesDir, PREDICTIONS_FILE)
 
-        val predictionsMap: MutableMap<String, PredictionResult> =
-            if (file.exists()) {
-                val type = object : TypeToken<MutableMap<String, PredictionResult>>() {}.type
-                gson.fromJson(FileReader(file), type) ?: mutableMapOf()
-            } else mutableMapOf()
+        val type = object : TypeToken<MutableMap<String, PredictionResult>>() {}.type
+        val existing: MutableMap<String, PredictionResult> =
+            if (file.exists()) gson.fromJson(FileReader(file), type) ?: mutableMapOf()
+            else mutableMapOf()
 
-        predictionsMap[fileName] = prediction
+        existing[fileName] = prediction
 
-        FileWriter(file).use { gson.toJson(predictionsMap, it) }
+        FileWriter(file).use { gson.toJson(existing, it) }
     }
 
-    // --- Load predictions ---
     private fun loadPredictions(context: Context): Map<String, PredictionResult> {
         val file = File(context.filesDir, PREDICTIONS_FILE)
         if (!file.exists()) return emptyMap()
 
         val type = object : TypeToken<Map<String, PredictionResult>>() {}.type
-        return FileReader(file).use { gson.fromJson(it, type) } ?: emptyMap()
+        return FileReader(file).use { gson.fromJson(it, type) ?: emptyMap() }
     }
 
-    // --- Save bitmap + return filename ---
+    // -----------------------------
+    // Save bitmap to Pictures/RiceDiseaseApp
+    // -----------------------------
     private fun saveBitmapToGallery(context: Context, bitmap: Bitmap): Pair<Uri?, String?> {
         val filename = "IMG_${System.currentTimeMillis()}.png"
         var uri: Uri? = null
 
         try {
-            val cv = android.content.ContentValues().apply {
+            val values = android.content.ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
                 put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
                 put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/RiceDiseaseApp")
             }
 
             val resolver = context.contentResolver
-            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cv)
+            uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
 
             uri?.let {
                 resolver.openOutputStream(it)?.use { out ->
@@ -260,18 +252,29 @@ class MainActivity : ComponentActivity() {
         return uri to filename
     }
 
-    // --- Load images from gallery ---
-    private fun loadAllGalleryImages(context: Context, folder: String = "RiceDiseaseApp"): List<Pair<Bitmap, String>> {
+    // -----------------------------
+    // Load all saved images
+    // -----------------------------
+    private fun loadAllGalleryImages(
+        context: Context,
+        folder: String = "RiceDiseaseApp"
+    ): List<Pair<Bitmap, String>> {
+
         val images = mutableListOf<Pair<Bitmap, String>>()
-        val projection = arrayOf(MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME)
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DISPLAY_NAME
+        )
 
-        val selection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
-        else null
+        val selection =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+            else null
 
-        val selectionArgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
-            arrayOf("%$folder%")
-        else null
+        val selectionArgs =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+                arrayOf("%$folder%")
+            else null
 
         context.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
@@ -280,6 +283,7 @@ class MainActivity : ComponentActivity() {
             selectionArgs,
             "${MediaStore.Images.Media.DATE_ADDED} DESC"
         )?.use { cursor ->
+
             val idCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             val nameCol = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
 
@@ -287,12 +291,12 @@ class MainActivity : ComponentActivity() {
                 val id = cursor.getLong(idCol)
                 val name = cursor.getString(nameCol)
 
-                val contentUri = android.content.ContentUris.withAppendedId(
+                val uri = android.content.ContentUris.withAppendedId(
                     MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
                     id
                 )
 
-                val bitmap = context.contentResolver.openInputStream(contentUri)?.use { stream ->
+                val bitmap = context.contentResolver.openInputStream(uri)?.use { stream ->
                     BitmapFactory.decodeStream(stream)
                 }
 
