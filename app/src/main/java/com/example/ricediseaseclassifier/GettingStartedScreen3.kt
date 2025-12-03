@@ -68,7 +68,7 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
-                        text = "View the result and get quick tips for action.",
+                        text = "View the result and monitor your rice health.",
                         color = Color.Black,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center,
