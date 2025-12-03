@@ -79,7 +79,6 @@ class MainActivity : ComponentActivity() {
                         handleNewImage(context, bitmap, savedImages)
                         currentScreen = "result"
                     } else {
-                        // User pressed back or cancelled -> navigate to home
                         currentScreen = "home"
                     }
                 }

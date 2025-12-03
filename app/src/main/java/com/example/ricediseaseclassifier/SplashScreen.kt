@@ -29,10 +29,9 @@ fun SplashScreen(
 ) {
     var startAnimation by remember { mutableStateOf(false) }
 
-    // Run animation and move to next screen
     LaunchedEffect(Unit) {
         startAnimation = true
-        delay(2000) // length of splash animation
+        delay(2000)
         onTimeout()
     }
 

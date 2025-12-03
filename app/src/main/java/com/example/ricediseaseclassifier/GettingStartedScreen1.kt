@@ -29,7 +29,6 @@ fun GettingStartedScreen1(onNext: () -> Unit = {}) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // 🌿 Background image
         Image(
             painter = painterResource(id = R.drawable.splash_screen_v2),
             contentDescription = "Background",
@@ -37,13 +36,11 @@ fun GettingStartedScreen1(onNext: () -> Unit = {}) {
             contentScale = ContentScale.Crop
         )
 
-        // Main vertical layout (white box + dots + next button)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            // 🧭 White translucent box
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -58,28 +55,28 @@ fun GettingStartedScreen1(onNext: () -> Unit = {}) {
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // 🌾 Logo
+                    // App Logo
                     Image(
                         painter = painterResource(id = R.drawable.agrihealth_logo_splashscreen),
                         contentDescription = "App Logo",
-                        modifier = Modifier.size(100.dp)
+                        modifier = Modifier.size(140.dp)
                     )
 
-                    // 🌱 Title
+                    // Title
                     Text(
                         text = "Welcome to AgriHealth Mobile!",
                         color = Color(0xFF2C3E2E),
-                        fontSize = 24.sp,
+                        fontSize = 20.sp,
                         fontFamily = ptSansNarrow,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
 
-                    // 📱 Description
+                    // Description
                     Text(
                         text = "AgriHealth Mobile helps Filipino farmers quickly detect rice leaf diseases using smart image analysis. With just a photo, the app provides instant, offline results to support healthier crops and better harvests.",
                         color = Color.Black,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 25.sp
                     )

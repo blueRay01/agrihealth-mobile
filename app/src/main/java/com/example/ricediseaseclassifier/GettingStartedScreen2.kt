@@ -28,7 +28,7 @@ fun GettingStartedScreen2(onNext: () -> Unit = {}) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // 🌿 Background image
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.splash_screen_v2),
             contentDescription = "Background",
@@ -36,17 +36,15 @@ fun GettingStartedScreen2(onNext: () -> Unit = {}) {
             contentScale = ContentScale.Crop
         )
 
-        // Main vertical layout (white box + dots + next button)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            // 🧭 White translucent box — same as Screen 1
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
-                    .height(500.dp) // ✅ same height as screen 1
+                    .height(500.dp)
                     .clip(RoundedCornerShape(30.dp))
                     .background(Color.White.copy(alpha = 0.6f))
                     .padding(vertical = 40.dp, horizontal = 24.dp)
@@ -58,7 +56,6 @@ fun GettingStartedScreen2(onNext: () -> Unit = {}) {
                         .fillMaxWidth()
                         .fillMaxHeight()
                 ) {
-                    // 🖼 Sample image
                     Image(
                         painter = painterResource(id = R.drawable.scan_zone),
                         contentDescription = "Sample Scan Zone",
@@ -69,11 +66,11 @@ fun GettingStartedScreen2(onNext: () -> Unit = {}) {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // 📱 Description
+                    // Description
                     Text(
                         text = "Take or upload a clear photo of your rice leaf, and let the app analyze it instantly for disease detection.",
                         color = Color.Black,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 25.sp
                     )
@@ -119,7 +116,6 @@ fun GettingStartedScreen2(onNext: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(50.dp)) // ✅ same spacing before button
 
-            // ▶️ Next button (same style as Screen 1)
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier

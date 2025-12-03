@@ -50,7 +50,7 @@ fun HistoryScreen(
 ) {
     var sortOrder by remember { mutableStateOf("Recent") }
 
-    // Sort images for display
+    // Sort images
     val sortedImages = remember(userImages, sortOrder) {
         when (sortOrder) {
             "Recent" -> userImages.toList()
@@ -69,7 +69,7 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 100.dp)
         ) {
-            // 🌾 Logo + App Name
+            // Logo & App Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -97,7 +97,7 @@ fun HistoryScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔽 Sort dropdown
+            // Sort dropdown
             var expanded by remember { mutableStateOf(false) }
             Box(
                 modifier = Modifier
@@ -140,7 +140,7 @@ fun HistoryScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🔹 Images list
+            // Images list
             if (sortedImages.isNotEmpty()) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -226,7 +226,7 @@ fun HistoryScreen(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White)
                 ) {
-                    //Home
+                    // Home
                     BottomNavItem(
                         iconResActive = R.drawable.icon_home_active,
                         iconResInactive = R.drawable.icon_home,
@@ -239,7 +239,7 @@ fun HistoryScreen(
 
                     Spacer(modifier = Modifier.width(64.dp))
 
-                    //History
+                    // History
                     BottomNavItem(
                         iconResActive = R.drawable.icon_history_active,
                         iconResInactive = R.drawable.icon_history,

@@ -28,7 +28,7 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        // 🌿 Background image
+        // Background image
         Image(
             painter = painterResource(id = R.drawable.splash_screen_v2),
             contentDescription = "Background",
@@ -42,7 +42,6 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            // 🧭 White translucent box — same as previous screens
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
@@ -58,9 +57,8 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
                         .fillMaxWidth()
                         .fillMaxHeight()
                 ) {
-                    // 🖼 Placeholder for future image
                     Image(
-                        painter = painterResource(id = R.drawable.scan_zone), // replace later
+                        painter = painterResource(id = R.drawable.result_pic),
                         contentDescription = "Sample Image",
                         modifier = Modifier
                             .size(250.dp)
@@ -69,11 +67,10 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // 📱 Placeholder text
                     Text(
                         text = "View the result and get quick tips for action.",
                         color = Color.Black,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 25.sp
                     )
@@ -111,7 +108,7 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
                 // Second (elongated to show last page)
                 Box(
                     modifier = Modifier
-                        .size(width = 40.dp, height = 8.dp)
+                        .size(width = 24.dp, height = 8.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFF6E9277))
                 )
@@ -119,7 +116,6 @@ fun GettingStartedScreen3(onNext: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.height(50.dp))
 
-            // ▶️ Finish / Next button
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier

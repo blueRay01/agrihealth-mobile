@@ -25,7 +25,6 @@ fun ResultScreen(
     onBackToDashboard: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Back arrow at top-left
         IconButton(
             onClick = onBackToDashboard,
             modifier = Modifier

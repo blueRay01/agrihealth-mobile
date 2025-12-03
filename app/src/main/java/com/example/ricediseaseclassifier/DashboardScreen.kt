@@ -50,7 +50,7 @@ fun DashboardScreen(
                 .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = navHeight)
                 .align(Alignment.TopStart)
         ) {
-            // 🌾 Logo + App Name
+            // Logo & App Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -78,7 +78,7 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 🌟 Welcome banner
+            // Welcome banner
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -86,7 +86,7 @@ fun DashboardScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFFFFEE1))
             ) {
-                //Ellipse
+                // Ellipse
                 Image(
                     painter = painterResource(id = R.drawable.ellipse),
                     contentDescription = "Ellipse Background",
@@ -95,7 +95,7 @@ fun DashboardScreen(
                         .offset(x = 156.dp, y = 0.dp)
                 )
 
-                //🌾 Rice Pic
+                // Rice Pic
                 Image(
                     painter = painterResource(id = R.drawable.rice_pic),
                     contentDescription = "Rice Picture",
@@ -104,7 +104,7 @@ fun DashboardScreen(
                         .offset(x = 168.dp, y = 17.dp)
                 )
 
-                //Texts
+                // Texts
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -147,7 +147,7 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Images (Grid/List Toggle)
+            // Images (Grid/List Toggle)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -178,9 +178,9 @@ fun DashboardScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // 🔹 Images grid/list
+            // Images grid/list
             if (recentImages.isNotEmpty()) {
-                //Grid View
+                // Grid view
                 if (gridMode) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -200,7 +200,7 @@ fun DashboardScreen(
                         }
                     }
                 } else {
-                    //List View
+                    // List view
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
@@ -272,7 +272,7 @@ fun DashboardScreen(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White)
                 ) {
-                    //Home
+                    // Home
                     BottomNavItem(
                         iconResActive = R.drawable.icon_home_active,
                         iconResInactive = R.drawable.icon_home,
@@ -285,7 +285,7 @@ fun DashboardScreen(
 
                     Spacer(modifier = Modifier.width(64.dp))
 
-                    //History
+                    // History
                     BottomNavItem(
                         iconResActive = R.drawable.icon_history_active,
                         iconResInactive = R.drawable.icon_history,
