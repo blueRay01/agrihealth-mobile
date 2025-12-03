@@ -2,7 +2,6 @@ package com.example.ricediseaseclassifier
 
 import android.graphics.Bitmap
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,7 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.ui.draw.shadow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +41,7 @@ fun DashboardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F2F2))
+            .background(Color(0xFFFFF6EA))
     ) {
         Column(
             modifier = Modifier
@@ -54,15 +52,17 @@ fun DashboardScreen(
             // 🌾 Logo + App Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(x = (-16).dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.agrihealth_logo_1),
+                    painter = painterResource(id = R.drawable.agrihealth_logo),
                     contentDescription = "App Logo",
                     modifier = Modifier.size(51.dp),
                     contentScale = ContentScale.Fit
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "AGRIHEALTH MOBILE",
                     fontFamily = ptSansBold,
@@ -82,17 +82,33 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(144.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFFFFEE1))
             ) {
+                //Ellipse
                 Image(
-                    painter = painterResource(id = R.drawable.welcome_ms),
-                    contentDescription = "Welcome Banner",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    painter = painterResource(id = R.drawable.ellipse),
+                    contentDescription = "Ellipse Background",
+                    modifier = Modifier
+                        .size(145.dp)
+                        .offset(x = 156.dp, y = 0.dp)
                 )
+
+                //🌾 Rice Pic
+                Image(
+                    painter = painterResource(id = R.drawable.rice_pic),
+                    contentDescription = "Rice Picture",
+                    modifier = Modifier
+                        .size(126.dp)
+                        .offset(x = 168.dp, y = 17.dp)
+                )
+
+                //Texts
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .padding(start = 25.dp),
+                        .padding(start = 20.dp)
+                        .offset(y = 2.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
@@ -102,30 +118,35 @@ fun DashboardScreen(
                         fontSize = 20.sp,
                         color = Color(0xFF6E9277)
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Detect rice leaf diseases \ninstantly with just a photo — \nfast, easy, and ready even \nwithout internet.",
+                        text = "Detect rice leaf diseases \ninstantly with just a photo \n— fast, easy, and ready \neven without internet.",
                         fontFamily = calibriRegular,
                         fontSize = 12.sp,
                         color = Color.Black,
-                        lineHeight = 14.sp
+                        lineHeight = 18.sp
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Upload button -> now handled by MainActivity
-            Button(
-                onClick = { onUploadRequest() },
-                modifier = Modifier.fillMaxWidth()
+            // Upload button
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = "Upload Image")
+                Button(
+                    onClick = { onUploadRequest() },
+                    modifier = Modifier.width(260.dp)
+                ) {
+                    Text(text = "Upload Image")
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // 🔹 Images title + grid/list toggle
+            // 🔹 Images (Grid/List Toggle)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -145,24 +166,28 @@ fun DashboardScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     val icon = if (gridMode) R.drawable.icon_grid else R.drawable.icon_list
+                    val iconSize = if (gridMode) 17.dp else 20.dp
                     Image(
                         painter = painterResource(id = icon),
                         contentDescription = "Toggle Grid/List",
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(iconSize)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // 🔹 Images grid/list
             if (recentImages.isNotEmpty()) {
+                //Grid View
                 if (gridMode) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp)
                     ) {
                         items(recentImages.size) { index ->
                             val image = recentImages[index]
@@ -174,9 +199,12 @@ fun DashboardScreen(
                         }
                     }
                 } else {
+                    //List View
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(260.dp)
                     ) {
                         items(recentImages.size) { index ->
                             val image = recentImages[index]
@@ -185,7 +213,7 @@ fun DashboardScreen(
                                     bitmap = image.bitmap.asImageBitmap(),
                                     contentDescription = image.fileName,
                                     modifier = Modifier
-                                        .size(100.dp)
+                                        .size(60.dp)
                                         .clip(RoundedCornerShape(12.dp)),
                                     contentScale = ContentScale.Crop
                                 )
@@ -202,7 +230,9 @@ fun DashboardScreen(
                 }
             } else {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = (-50).dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -216,8 +246,7 @@ fun DashboardScreen(
             }
         }
 
-        // 🟢 Figma-style Floating Bottom Navigation
-        // 🟢 Figma-style Floating Bottom Navigation with “illusion” bulging camera
+        // Navigation Panel
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -225,7 +254,6 @@ fun DashboardScreen(
                 .align(Alignment.BottomCenter),
             contentAlignment = Alignment.Center
         ) {
-            // Bottom Navigation with bigger camera icon
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -233,49 +261,52 @@ fun DashboardScreen(
                     .align(Alignment.BottomCenter),
                 contentAlignment = Alignment.Center
             ) {
-                // Main white pill
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 60.dp) // space from screen edges
+                        .padding(horizontal = 60.dp)
                         .height(70.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White)
                 ) {
+                    //Home
                     BottomNavItem(
-                        iconRes = R.drawable.icon1_active,
+                        iconRes = R.drawable.icon_home,
                         label = "Home",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .offset(y=2.dp)
                     ) { onNavigate("home") }
 
-                    Spacer(modifier = Modifier.width(64.dp)) // leave space for camera icon
+                    Spacer(modifier = Modifier.width(64.dp))
 
+                    //History
                     BottomNavItem(
-                        iconRes = R.drawable.icon2,
+                        iconRes = R.drawable.icon_history,
                         label = "History",
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .offset(y=2.dp)
                     ) { onNavigate("history") }
                 }
 
-                // Fixed-position larger camera icon
+                // Camera
                 Image(
-                    painter = painterResource(id = R.drawable.icon3),
+                    painter = painterResource(id = R.drawable.icon_camera),
                     contentDescription = "Camera",
                     modifier = Modifier
-                        .size(80.dp) // bigger than other icons
+                        .size(86.dp)
                         .align(Alignment.Center)
-                        .offset(y = (-5).dp) // optional: slightly above the pill
+                        .offset(y = (-5).dp)
                         .clickable { onNavigate("camera") }
                 )
             }
         }
-
-
-
-        }
+    }
 }
+
 @Composable
 private fun BottomNavItem(
     iconRes: Int,

@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.background
 import androidx.compose.ui.draw.clip
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
@@ -43,7 +42,7 @@ fun ResultScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 64.dp, start = 25.dp, end = 25.dp), // leave space for arrow
+                .padding(top = 64.dp, start = 25.dp, end = 25.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(

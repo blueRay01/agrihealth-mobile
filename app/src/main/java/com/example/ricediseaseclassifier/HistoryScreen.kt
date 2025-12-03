@@ -1,14 +1,12 @@
 package com.example.ricediseaseclassifier
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -26,10 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.foundation.lazy.items       // For LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.text.style.TextOverflow
-
 
 data class UserImage(
     val bitmap: Bitmap,
@@ -38,6 +35,7 @@ data class UserImage(
     val confidence: Float
 )
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun HistoryScreen(
     onNavigate: (String) -> Unit,
@@ -47,9 +45,9 @@ fun HistoryScreen(
 
     // Sort images based on dropdown selection
     val sortedImages = remember(userImages, sortOrder) {
-        when(sortOrder) {
-            "Recent" -> userImages
-            "Oldest" -> userImages.reversed()
+        when (sortOrder) {
+            "Recent" -> userImages.reversed()
+            "Oldest" -> userImages
             else -> userImages
         }
     }
@@ -57,27 +55,27 @@ fun HistoryScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2F2F2))
+            .background(Color(0xFFFFF6EA))
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 100.dp) // leave space for nav
+                .padding(start = 35.dp, end = 35.dp, top = 25.dp, bottom = 100.dp)
         ) {
             // 🌾 Logo + App Name
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .offset(x = (-16).dp)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.agrihealth_logo_1),
+                    painter = painterResource(id = R.drawable.agrihealth_logo),
                     contentDescription = "App Logo",
-                    modifier = Modifier
-                        .height(51.dp)
-                        .width(51.dp),
+                    modifier = Modifier.size(51.dp),
                     contentScale = ContentScale.Fit
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "AGRIHEALTH MOBILE",
                     fontFamily = ptSansBold,
@@ -139,7 +137,9 @@ fun HistoryScreen(
             if (sortedImages.isNotEmpty()) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(470.dp)
                 ) {
                     items(sortedImages) { item ->
                         Row(
@@ -149,7 +149,7 @@ fun HistoryScreen(
                                 bitmap = item.bitmap.asImageBitmap(),
                                 contentDescription = item.fileName,
                                 modifier = Modifier
-                                    .size(100.dp)
+                                    .size(80.dp)
                                     .clip(RoundedCornerShape(12.dp)),
                                 contentScale = ContentScale.Crop
                             )
@@ -165,7 +165,12 @@ fun HistoryScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${item.result} (${String.format("%.2f", item.confidence)}%)",
+                                    text = "${item.result} (${
+                                        String.format(
+                                            "%.2f",
+                                            item.confidence
+                                        )
+                                    })",
                                     fontFamily = calibriRegular,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -194,54 +199,66 @@ fun HistoryScreen(
             }
         }
 
-        // 🟢 Figma-style Floating Bottom Navigation
+        // Navigation Panel
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 15.dp)
+                .padding(bottom = 10.dp)
                 .align(Alignment.BottomCenter),
             contentAlignment = Alignment.Center
         ) {
-            // Main pill
-            Row(
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically,
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 60.dp)
-                    .height(70.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
+                    .padding(bottom = 5.dp)
+                    .align(Alignment.BottomCenter),
+                contentAlignment = Alignment.Center
             ) {
-                BottomNavItem(
-                    iconRes = R.drawable.icon1,
-                    label = "Home",
-                    modifier = Modifier.weight(1f)
-                ) { onNavigate("home") }
+                Row(
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 60.dp)
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                ) {
+                    //Home
+                    BottomNavItem(
+                        iconRes = R.drawable.icon_home,
+                        label = "Home",
+                        modifier = Modifier
+                            .weight(1f)
+                            .offset(y = 2.dp)
+                    ) { onNavigate("home") }
 
-                Spacer(modifier = Modifier.width(64.dp)) // space for camera
+                    Spacer(modifier = Modifier.width(64.dp))
 
-                BottomNavItem(
-                    iconRes = R.drawable.icon2,
-                    label = "History",
-                    modifier = Modifier.weight(1f)
-                ) { onNavigate("history") }
+                    //History
+                    BottomNavItem(
+                        iconRes = R.drawable.icon_history,
+                        label = "History",
+                        modifier = Modifier
+                            .weight(1f)
+                            .offset(y = 2.dp)
+                    ) { onNavigate("history") }
+                }
+
+                // Camera
+                Image(
+                    painter = painterResource(id = R.drawable.icon_camera),
+                    contentDescription = "Camera",
+                    modifier = Modifier
+                        .size(86.dp)
+                        .align(Alignment.Center)
+                        .offset(y = (-5).dp)
+                        .clickable { onNavigate("camera") }
+                )
             }
-
-            // Larger central camera icon
-            Image(
-                painter = painterResource(id = R.drawable.icon3),
-                contentDescription = "Camera",
-                modifier = Modifier
-                    .size(80.dp)
-                    .align(Alignment.Center)
-                    .offset(y = (-5).dp)
-                    .clickable { onNavigate("camera") }
-            )
         }
     }
 }
-
 
 @Composable
 private fun BottomNavItem(

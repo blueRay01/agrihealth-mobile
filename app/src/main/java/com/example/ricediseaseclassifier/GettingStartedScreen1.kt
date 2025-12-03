@@ -21,9 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 
 @Composable
 fun GettingStartedScreen1(onNext: () -> Unit = {}) {
@@ -62,7 +60,7 @@ fun GettingStartedScreen1(onNext: () -> Unit = {}) {
                 ) {
                     // 🌾 Logo
                     Image(
-                        painter = painterResource(id = R.drawable.agrihealth_logo_1),
+                        painter = painterResource(id = R.drawable.agrihealth_logo_splashscreen),
                         contentDescription = "App Logo",
                         modifier = Modifier.size(100.dp)
                     )
