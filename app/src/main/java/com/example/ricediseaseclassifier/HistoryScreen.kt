@@ -36,6 +36,12 @@ data class UserImage(
 )
 
 @SuppressLint("DefaultLocale")
+fun formatLabel(raw: String): String {
+    return raw.split("_")
+        .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } }
+}
+
+@SuppressLint("DefaultLocale")
 @Composable
 fun HistoryScreen(
     onNavigate: (String) -> Unit,
@@ -165,12 +171,7 @@ fun HistoryScreen(
                                     overflow = TextOverflow.Ellipsis
                                 )
                                 Text(
-                                    text = "${item.result} (${
-                                        String.format(
-                                            "%.2f",
-                                            item.confidence
-                                        )
-                                    })",
+                                    text = "${formatLabel(item.result)} (${String.format("%.2f%%", item.confidence)})",
                                     fontFamily = calibriRegular,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,

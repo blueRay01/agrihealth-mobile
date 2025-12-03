@@ -11,6 +11,7 @@ class ImageClassifier(private val context: Context) {
     private var interpreter: Interpreter? = null
     private val inputSize = 224 // must match your TFLite model input
     private val labels = listOf(
+        "Unknown",                 // <-- added new class
         "bacterial_leaf_blight",
         "healthy_rice_plant",
         "narrow_brown_spot",
@@ -22,7 +23,7 @@ class ImageClassifier(private val context: Context) {
         "stem_rot",
         "tungro_virus"
     )
-     
+
     init {
         loadModel()
     }
@@ -38,7 +39,7 @@ class ImageClassifier(private val context: Context) {
 
     fun classify(bitmap: Bitmap): PredictionResult {
         val inputBuffer = preprocessImage(bitmap)
-        val outputBuffer = Array(1) { FloatArray(labels.size) }
+        val outputBuffer = Array(1) { FloatArray(labels.size) } // matches new class count
 
         interpreter?.run(inputBuffer, outputBuffer)
 
@@ -56,18 +57,10 @@ class ImageClassifier(private val context: Context) {
         val confidence = predictions[maxIndex] * 100f
 
         // If model is very unsure (<20%), treat as unknown
-        if (confidence < 20f) {
-            return PredictionResult(
-                label = "Unknown",
-                confidence = confidence,
-                isUnknown = true
-            )
-        }
-
         return PredictionResult(
             label = labels[maxIndex],
             confidence = confidence,
-            isUnknown = false
+            isUnknown = confidence < 20f
         )
     }
 
@@ -91,5 +84,4 @@ class ImageClassifier(private val context: Context) {
         buffer.rewind()
         return buffer
     }
-
 }
