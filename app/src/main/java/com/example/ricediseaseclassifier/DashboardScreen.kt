@@ -27,13 +27,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.ArrowBack
+
 
 @Composable
 fun DashboardScreen(
     currentScreen: String,
     onNavigate: (String) -> Unit,
     recentImages: SnapshotStateList<UserImage>,
-    onUploadRequest: () -> Unit
+    onUploadRequest: () -> Unit,
+//    selectedImage: MutableState<UserImage?>,
+    onPreviewClick: (UserImage) -> Unit
 ) {
     val context = LocalContext.current
     var gridMode by remember { mutableStateOf(true) }
@@ -86,7 +90,6 @@ fun DashboardScreen(
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFFFFFEE1))
             ) {
-                // Ellipse
                 Image(
                     painter = painterResource(id = R.drawable.ellipse),
                     contentDescription = "Ellipse Background",
@@ -94,8 +97,6 @@ fun DashboardScreen(
                         .size(145.dp)
                         .offset(x = 156.dp, y = 0.dp)
                 )
-
-                // Rice Pic
                 Image(
                     painter = painterResource(id = R.drawable.rice_pic),
                     contentDescription = "Rice Picture",
@@ -103,8 +104,6 @@ fun DashboardScreen(
                         .size(126.dp)
                         .offset(x = 168.dp, y = 17.dp)
                 )
-
-                // Texts
                 Column(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -180,7 +179,6 @@ fun DashboardScreen(
 
             // Images grid/list
             if (recentImages.isNotEmpty()) {
-                // Grid view
                 if (gridMode) {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(3),
@@ -195,12 +193,13 @@ fun DashboardScreen(
                             ImageWithBottomText(
                                 bitmap = image.bitmap,
                                 fileName = image.fileName,
-                                modifier = Modifier.size(120.dp)
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clickable { onPreviewClick(image) }
                             )
                         }
                     }
                 } else {
-                    // List view
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier
@@ -209,7 +208,12 @@ fun DashboardScreen(
                     ) {
                         items(recentImages.size) { index ->
                             val image = recentImages[index]
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onPreviewClick(image) }
+                            ) {
                                 Image(
                                     bitmap = image.bitmap.asImageBitmap(),
                                     contentDescription = image.fileName,
@@ -272,7 +276,6 @@ fun DashboardScreen(
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White)
                 ) {
-                    // Home
                     BottomNavItem(
                         iconResActive = R.drawable.icon_home_active,
                         iconResInactive = R.drawable.icon_home,
@@ -285,7 +288,6 @@ fun DashboardScreen(
 
                     Spacer(modifier = Modifier.width(64.dp))
 
-                    // History
                     BottomNavItem(
                         iconResActive = R.drawable.icon_history_active,
                         iconResInactive = R.drawable.icon_history,
@@ -297,7 +299,6 @@ fun DashboardScreen(
                     ) { onNavigate("history") }
                 }
 
-                // Camera
                 Image(
                     painter = painterResource(id = R.drawable.icon_camera),
                     contentDescription = "Camera",
@@ -313,7 +314,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun BottomNavItem(
+fun BottomNavItem(
     iconResActive: Int,
     iconResInactive: Int,
     label: String,
@@ -391,5 +392,61 @@ fun ImageWithBottomText(
             overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun PreviewScreen(
+    image: UserImage?,
+    onBack: () -> Unit
+) {
+    if (image == null) return
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black),
+        contentAlignment = Alignment.TopStart
+    ) {
+        Image(
+            bitmap = image.bitmap.asImageBitmap(),
+            contentDescription = image.fileName,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
+
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier
+                .padding(16.dp)
+                .size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Back",
+                tint = Color.White
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .background(Color.Black.copy(alpha = 0.5f))
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = image.result,
+                fontSize = 22.sp,
+                color = Color.White,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "Confidence: ${String.format("%.2f", image.confidence)}%",
+                fontSize = 14.sp,
+                color = Color.LightGray
+            )
+        }
     }
 }

@@ -265,46 +265,46 @@ fun HistoryScreen(
         }
     }
 }
-
-@Composable
-private fun BottomNavItem(
-    iconResActive: Int,
-    iconResInactive: Int,
-    label: String,
-    isSelected: Boolean = false,
-    isCentral: Boolean = false,
-    useMaterialIcon: Boolean = false,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val iconRes = if (isSelected) iconResActive else iconResInactive
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier.clickable { onClick() }
-    ) {
-        if (useMaterialIcon) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = label,
-                modifier = Modifier.size(if (isCentral) 50.dp else 32.dp)
-            )
-        } else {
-            Image(
-                painter = painterResource(id = iconRes),
-                contentDescription = label,
-                modifier = Modifier.size(if (isCentral) 50.dp else 32.dp)
-            )
-        }
-
-        if (!isCentral) {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
+//
+//@Composable
+//private fun BottomNavItem(
+//    iconResActive: Int,
+//    iconResInactive: Int,
+//    label: String,
+//    isSelected: Boolean = false,
+//    isCentral: Boolean = false,
+//    useMaterialIcon: Boolean = false,
+//    modifier: Modifier = Modifier,
+//    onClick: () -> Unit
+//) {
+//    val iconRes = if (isSelected) iconResActive else iconResInactive
+//
+//    Column(
+//        horizontalAlignment = Alignment.CenterHorizontally,
+//        verticalArrangement = Arrangement.Center,
+//        modifier = modifier.clickable { onClick() }
+//    ) {
+//        if (useMaterialIcon) {
+//            Icon(
+//                imageVector = Icons.Default.Settings,
+//                contentDescription = label,
+//                modifier = Modifier.size(if (isCentral) 50.dp else 32.dp)
+//            )
+//        } else {
+//            Image(
+//                painter = painterResource(id = iconRes),
+//                contentDescription = label,
+//                modifier = Modifier.size(if (isCentral) 50.dp else 32.dp)
+//            )
+//        }
+//
+//        if (!isCentral) {
+//            Text(
+//                text = label,
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium,
+//                textAlign = TextAlign.Center
+//            )
+//        }
+//    }
+//}

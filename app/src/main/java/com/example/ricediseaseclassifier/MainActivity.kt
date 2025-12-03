@@ -47,6 +47,8 @@ class MainActivity : ComponentActivity() {
                     sharedPref.getBoolean("has_seen_onboarding", false)
                 }
 
+                var selectedImage by remember { mutableStateOf<UserImage?>(null) }
+
                 var showSplash by remember { mutableStateOf(true) }
                 var showOnboarding by remember { mutableStateOf(!hasSeenOnboarding) }
                 var currentScreen by remember { mutableStateOf("home") }
@@ -134,12 +136,20 @@ class MainActivity : ComponentActivity() {
                                 currentScreen = "home"
                             })
 
-                        "home" ->
-                            DashboardScreen(
-                                currentScreen = currentScreen,
-                                onNavigate = { currentScreen = it },
-                                recentImages = savedImages,
-                                onUploadRequest = { galleryLauncher.launch("image/*") }
+                        "home" -> DashboardScreen(
+                            currentScreen = currentScreen,
+                            onNavigate = { currentScreen = it },
+                            recentImages = savedImages,
+                            onUploadRequest = { galleryLauncher.launch("image/*") },
+                            onPreviewClick = { image ->
+                                selectedImage = image  // <-- fixed
+                                currentScreen = "preview"
+                            }
+                        )
+
+                        "preview" -> PreviewScreen(
+                            image = selectedImage,  // <-- fixed
+                            onBack = { currentScreen = "home" }
                         )
 
                         "history" ->
