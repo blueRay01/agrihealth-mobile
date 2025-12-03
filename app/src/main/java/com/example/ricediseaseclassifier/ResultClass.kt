@@ -71,7 +71,9 @@ fun ResultScreen(
             // Display result
             if (result != null) {
                 Text(
-                    text = if (result.isUnknown) "Unknown Plant" else result.label.replace("_", " "),
+                    text = if (result.isUnknown) "Unknown Plant"
+                           else result.label.split("_")
+                                .joinToString(" ") { it.replaceFirstChar { c -> c.uppercaseChar() } },
                     fontFamily = ptSansBold,
                     fontSize = 22.sp,
                     color = if (result.isUnknown) Color(0xFFB00020) else Color.Black

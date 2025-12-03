@@ -44,17 +44,18 @@ fun formatLabel(raw: String): String {
 @SuppressLint("DefaultLocale")
 @Composable
 fun HistoryScreen(
+    currentScreen: String,
     onNavigate: (String) -> Unit,
     userImages: SnapshotStateList<UserImage>
 ) {
     var sortOrder by remember { mutableStateOf("Recent") }
 
-    // Sort images based on dropdown selection
+    // Sort images for display
     val sortedImages = remember(userImages, sortOrder) {
         when (sortOrder) {
-            "Recent" -> userImages.reversed()
-            "Oldest" -> userImages
-            else -> userImages
+            "Recent" -> userImages.toList()
+            "Oldest" -> userImages.toList().reversed()
+            else -> userImages.toList()
         }
     }
 
@@ -227,22 +228,26 @@ fun HistoryScreen(
                 ) {
                     //Home
                     BottomNavItem(
-                        iconRes = R.drawable.icon_home,
+                        iconResActive = R.drawable.icon_home_active,
+                        iconResInactive = R.drawable.icon_home,
                         label = "Home",
+                        isSelected = currentScreen == "home",
                         modifier = Modifier
                             .weight(1f)
-                            .offset(y = 2.dp)
+                            .offset(y=2.dp)
                     ) { onNavigate("home") }
 
                     Spacer(modifier = Modifier.width(64.dp))
 
                     //History
                     BottomNavItem(
-                        iconRes = R.drawable.icon_history,
+                        iconResActive = R.drawable.icon_history_active,
+                        iconResInactive = R.drawable.icon_history,
                         label = "History",
+                        isSelected = currentScreen == "history",
                         modifier = Modifier
                             .weight(1f)
-                            .offset(y = 2.dp)
+                            .offset(y=2.dp)
                     ) { onNavigate("history") }
                 }
 
@@ -263,13 +268,17 @@ fun HistoryScreen(
 
 @Composable
 private fun BottomNavItem(
-    iconRes: Int,
+    iconResActive: Int,
+    iconResInactive: Int,
     label: String,
+    isSelected: Boolean = false,
     isCentral: Boolean = false,
     useMaterialIcon: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val iconRes = if (isSelected) iconResActive else iconResInactive
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

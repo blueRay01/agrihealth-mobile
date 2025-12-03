@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun DashboardScreen(
+    currentScreen: String,
     onNavigate: (String) -> Unit,
     recentImages: SnapshotStateList<UserImage>,
     onUploadRequest: () -> Unit
@@ -273,8 +274,10 @@ fun DashboardScreen(
                 ) {
                     //Home
                     BottomNavItem(
-                        iconRes = R.drawable.icon_home,
+                        iconResActive = R.drawable.icon_home_active,
+                        iconResInactive = R.drawable.icon_home,
                         label = "Home",
+                        isSelected = currentScreen == "home",
                         modifier = Modifier
                             .weight(1f)
                             .offset(y=2.dp)
@@ -284,8 +287,10 @@ fun DashboardScreen(
 
                     //History
                     BottomNavItem(
-                        iconRes = R.drawable.icon_history,
+                        iconResActive = R.drawable.icon_history_active,
+                        iconResInactive = R.drawable.icon_history,
                         label = "History",
+                        isSelected = currentScreen == "history",
                         modifier = Modifier
                             .weight(1f)
                             .offset(y=2.dp)
@@ -309,13 +314,17 @@ fun DashboardScreen(
 
 @Composable
 private fun BottomNavItem(
-    iconRes: Int,
+    iconResActive: Int,
+    iconResInactive: Int,
     label: String,
+    isSelected: Boolean = false,
     isCentral: Boolean = false,
     useMaterialIcon: Boolean = false,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val iconRes = if (isSelected) iconResActive else iconResInactive
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,

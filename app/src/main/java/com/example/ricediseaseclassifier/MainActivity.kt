@@ -137,18 +137,17 @@ class MainActivity : ComponentActivity() {
 
                         "home" ->
                             DashboardScreen(
+                                currentScreen = currentScreen,
                                 onNavigate = { currentScreen = it },
                                 recentImages = savedImages,
-                                onUploadRequest = {
-                                    // When user taps the upload button on home screen
-                                    galleryLauncher.launch("image/*")
-                                }
-                            )
+                                onUploadRequest = { galleryLauncher.launch("image/*") }
+                        )
 
                         "history" ->
                             HistoryScreen(
                                 userImages = savedImages,
-                                onNavigate = { currentScreen = it }
+                                currentScreen = currentScreen,
+                                onNavigate = { currentScreen = it },
                             )
 
                         "camera" -> {
